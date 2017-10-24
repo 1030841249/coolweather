@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,11 +87,11 @@ public class ChooseAreaFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.choose_area,container,false);
-        titleText =(TextView)view.findViewById(R.id.title_text);
-        backButton =(Button)view.findViewById(R.id.back_button);
-        listView =(ListView)view.findViewById(R.id.list_view);
-        adapter =new ArrayAdapter<String>(getContext(),android.R.layout.simple_list_item_1,dataList);
+        View view = inflater.inflate(R.layout.choose_area, container, false);
+        titleText = (TextView) view.findViewById(R.id.title_text);
+        backButton = (Button) view.findViewById(R.id.back_button);
+        listView = (ListView) view.findViewById(R.id.list_view);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
         listView.setAdapter(adapter);
         return view;
     }
@@ -98,6 +99,7 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        Log.d("TAG", "onActivityCreated: choose");
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -106,6 +108,7 @@ public class ChooseAreaFragment extends Fragment {
                     queryCities();
                 }else if(currentLevel ==LEVEL_CITY){
                     selectedCity=cityList.get(position);
+                    queryCounties();
                     //
                 }
             }
@@ -114,53 +117,126 @@ public class ChooseAreaFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(currentLevel==LEVEL_COUNTY){
+                    queryCities();
 
                 }else if(currentLevel==LEVEL_CITY){
+                    queryProvinces();
 
                 }
 
             }
         });
+        queryProvinces();
     }
 
 
     /**
      * 查询全国所有的省，优先从数据库查询，如果没有查询到再去服务器上查询
      */
-    private void queryProvinces(){
+//    private void queryProvinces(){
+//        titleText.setText("中国");
+//        //按钮不可见
+//        backButton.setVisibility(View.GONE);
+//        //查询指定表的，所有数据
+//        provinceList =DataSupport.findAll(Province.class);
+//        //判断表中是否有数据
+//        if(provinceList.size()>0){
+//            //清理元素
+//            dataList.clear();
+//            //遍历集合对象
+//            for(Province province : provinceList){
+//                //把查询出来的数据添加进data集合
+//                dataList.add(province.getProvinceName());
+//                //适配器刷新
+//                adapter.notifyDataSetChanged();
+//                //将下标为0的值，显示在列表最上面
+//                listView.setSelection(0);
+//                //并把查询等级更改
+//                currentLevel=LEVEL_PROVINCE;
+//            }
+//        }else {
+//            //没有获取到任何数据，则去调用方法到服务器获取数据
+//            String address = "http://guolin.tech/api/china";
+//            queryFromServer(address,"province");
+//        }
+//    }
+
+    private void queryProvinces() {
         titleText.setText("中国");
-        //按钮不可见
         backButton.setVisibility(View.GONE);
-        //查询指定表的，所有数据
         provinceList = DataSupport.findAll(Province.class);
-        //判断表中是否有数据
-        if(provinceList.size()>0){
-            //清理元素
+        if (provinceList.size() > 0) {
             dataList.clear();
-            //遍历集合对象
-            for(Province province : provinceList){
-                //把查询出来的数据添加进data集合
+            for (Province province : provinceList) {
                 dataList.add(province.getProvinceName());
-                //适配器刷新
-                adapter.notifyDataSetChanged();
-                //将下标为0的值，显示在列表最上面
-                listView.setSelection(0);
-                //并把查询等级更改
-                currentLevel=LEVEL_PROVINCE;
             }
-        }else {
-            //没有获取到任何数据，则去调用方法到服务器获取数据
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            currentLevel = LEVEL_PROVINCE;
+        } else {
             String address = "http://guolin.tech/api/china";
-            queryFromServer(address,"province");
+            queryFromServer(address, "province");
         }
     }
+
+
+    /**
+     * 查询全国所有的市，优先从数据库查询，如果没有查询到再去服务器上查询
+     */
+    private void queryCities() {
+        titleText.setText(selectedProvince.getProvinceName());
+        backButton.setVisibility(View.VISIBLE);
+        cityList = DataSupport.where("provinceid=?",String.valueOf(selectedProvince.getId()))
+                .find(City.class);
+        if(cityList.size()>0){
+            dataList.clear();
+            for(City city :cityList){
+                dataList.add(city.getCityName());
+            }
+            adapter.notifyDataSetChanged();
+            //设置索引为0的值，放在列表最上面
+            listView.setSelection(0);
+            currentLevel=LEVEL_CITY;
+        }else {
+            //获取当前选择的省的代号，带入到网址中去请求数据
+            int provinceCode =selectedProvince.getProvinceCode();
+            String address="http://guolin.tech/api/china/"+provinceCode;
+            queryFromServer(address,"city");
+        }
+
+    }
+
+
+    /**
+     * 查询选中省内所有的县，优先从数据库查询，如果没有查询到再去服务器上查询
+     */
+    private void queryCounties() {
+        titleText.setText(selectedCity.getCityName());
+        backButton.setVisibility(View.VISIBLE);
+        countyList =DataSupport.where("cityid=?",String.valueOf(selectedCity.getId())).find(County.class);
+        if(countyList.size()>0){
+            dataList.clear();
+            for(County county:countyList){
+                dataList.add(county.getCountyName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            currentLevel=LEVEL_COUNTY;
+        }else{
+            int provinceCode=selectedProvince.getProvinceCode();
+            int cityCode =selectedCity.getCityCode();
+            String address="http://guolin.tech/api/china"+provinceCode+"/"+cityCode;
+            queryFromServer(address,"county");
+        }
+
+    }
+
 
     /**
      * 根据传入的地址和类型从服务器上查询省市县数据
      * @param address
      * @param type
      */
-
     private void queryFromServer(String address, final String type) {
         showProgressDislog();
         HttpUtil.sendOkHttpRequest(address, new Callback() {
@@ -180,6 +256,7 @@ public class ChooseAreaFragment extends Fragment {
             public void onResponse(Call call, Response response) throws IOException {
                 //回调接口，获取接口返回的服务器数据
                 String responseText = response.body().string();
+                Log.d("TAG", "onResponse: "+responseText);
                 boolean result=false;
                 //判断返回的类型，选择对应的解析方法
                 if("province".equals(type)){
@@ -211,16 +288,6 @@ public class ChooseAreaFragment extends Fragment {
 
     }
 
-    /**
-     * 查询选中省内所有的市，优先从数据库查询，如果没有查询到再去服务器上查询
-     */
-
-    private void queryCounties() {
-    }
-
-
-    private void queryCities() {
-    }
 
     /**
      * 显示进度对话框

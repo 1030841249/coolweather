@@ -25,7 +25,7 @@ public class Utility {
                 for(int i=0;i<allProvinces.length();i++){
                     //遍历得到每个数据
                     JSONObject jsonObject =allProvinces.getJSONObject(i);
-                    Province province =new Province();
+                    Province  province =new Province();
                     province.setProvinceName(jsonObject.getString("name"));
                     province.setProvinceCode(jsonObject.getInt("id"));
                     province.save();
