@@ -1,10 +1,13 @@
 package com.example.anew.coolweather.util;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.example.anew.coolweather.db.City;
 import com.example.anew.coolweather.db.County;
 import com.example.anew.coolweather.db.Province;
+import com.example.anew.coolweather.gson.Weather;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +29,7 @@ public class Utility {
                     //遍历得到每个数据
                     JSONObject jsonObject =allProvinces.getJSONObject(i);
                     Province  province =new Province();
+                    Log.d("TAG", "handleProvinceResponse: "+jsonObject.getString("name"));
                     province.setProvinceName(jsonObject.getString("name"));
                     province.setProvinceCode(jsonObject.getInt("id"));
                     province.save();
@@ -83,5 +87,21 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    /**
+     * 将返回的JSON数据解析成Weather实体类
+     */
+    public static Weather handleWeatherResponse(String response){
+        try{
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray =jsonObject.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            //JSON数据转换成Weather对象
+            return new Gson().fromJson(weatherContent,Weather.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }

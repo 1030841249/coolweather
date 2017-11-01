@@ -2,6 +2,7 @@ package com.example.anew.coolweather;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import com.example.anew.coolweather.db.City;
 import com.example.anew.coolweather.db.County;
 import com.example.anew.coolweather.db.Province;
+import com.example.anew.coolweather.gson.Weather;
 import com.example.anew.coolweather.util.HttpUtil;
 import com.example.anew.coolweather.util.Utility;
 
@@ -99,7 +101,6 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Log.d("TAG", "onActivityCreated: choose");
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -110,6 +111,14 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity=cityList.get(position);
                     queryCounties();
                     //
+                }
+                else if(currentLevel==LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    Log.d("TAG", "onItemClick: "+weatherId);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
@@ -133,51 +142,51 @@ public class ChooseAreaFragment extends Fragment {
     /**
      * 查询全国所有的省，优先从数据库查询，如果没有查询到再去服务器上查询
      */
-//    private void queryProvinces(){
-//        titleText.setText("中国");
-//        //按钮不可见
-//        backButton.setVisibility(View.GONE);
-//        //查询指定表的，所有数据
-//        provinceList =DataSupport.findAll(Province.class);
-//        //判断表中是否有数据
-//        if(provinceList.size()>0){
-//            //清理元素
-//            dataList.clear();
-//            //遍历集合对象
-//            for(Province province : provinceList){
-//                //把查询出来的数据添加进data集合
-//                dataList.add(province.getProvinceName());
-//                //适配器刷新
-//                adapter.notifyDataSetChanged();
-//                //将下标为0的值，显示在列表最上面
-//                listView.setSelection(0);
-//                //并把查询等级更改
-//                currentLevel=LEVEL_PROVINCE;
-//            }
-//        }else {
-//            //没有获取到任何数据，则去调用方法到服务器获取数据
-//            String address = "http://guolin.tech/api/china";
-//            queryFromServer(address,"province");
-//        }
-//    }
-
-    private void queryProvinces() {
+    private void queryProvinces(){
         titleText.setText("中国");
+        //按钮不可见
         backButton.setVisibility(View.GONE);
-        provinceList = DataSupport.findAll(Province.class);
-        if (provinceList.size() > 0) {
+        //查询指定表的，所有数据
+        provinceList =DataSupport.findAll(Province.class);
+        //判断表中是否有数据
+        if(provinceList.size()>0){
+            //清理元素
             dataList.clear();
-            for (Province province : provinceList) {
+            //遍历集合对象
+            for(Province province : provinceList){
+                //把查询出来的数据添加进data集合
                 dataList.add(province.getProvinceName());
+                //适配器刷新
+                adapter.notifyDataSetChanged();
+                //将下标为0的值，显示在列表最上面
+                listView.setSelection(0);
+                //并把查询等级更改
+                currentLevel=LEVEL_PROVINCE;
             }
-            adapter.notifyDataSetChanged();
-            listView.setSelection(0);
-            currentLevel = LEVEL_PROVINCE;
-        } else {
+        }else {
+            //没有获取到任何数据，则去调用方法到服务器获取数据
             String address = "http://guolin.tech/api/china";
-            queryFromServer(address, "province");
+            queryFromServer(address,"province");
         }
     }
+
+//    private void queryProvinces() {
+//        titleText.setText("中国");
+//        backButton.setVisibility(View.GONE);
+//        provinceList = DataSupport.findAll(Province.class);
+//        if (provinceList.size() > 0) {
+//            dataList.clear();
+//            for (Province province : provinceList) {
+//                dataList.add(province.getProvinceName());
+//            }
+//            adapter.notifyDataSetChanged();
+//            listView.setSelection(0);
+//            currentLevel = LEVEL_PROVINCE;
+//        } else {
+//            String address = "http://guolin.tech/api/china";
+//            queryFromServer(address, "province");
+//        }
+//    }
 
 
     /**
@@ -186,7 +195,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCities() {
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
-        cityList = DataSupport.where("provinceid=?",String.valueOf(selectedProvince.getId()))
+        cityList = DataSupport.where("provinceId=?",String.valueOf(selectedProvince.getId()))
                 .find(City.class);
         if(cityList.size()>0){
             dataList.clear();
@@ -213,7 +222,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
-        countyList =DataSupport.where("cityid=?",String.valueOf(selectedCity.getId())).find(County.class);
+        countyList =DataSupport.where("cityId=?",String.valueOf(selectedCity.getId())).find(County.class);
         if(countyList.size()>0){
             dataList.clear();
             for(County county:countyList){
@@ -225,7 +234,7 @@ public class ChooseAreaFragment extends Fragment {
         }else{
             int provinceCode=selectedProvince.getProvinceCode();
             int cityCode =selectedCity.getCityCode();
-            String address="http://guolin.tech/api/china"+provinceCode+"/"+cityCode;
+            String address="http://guolin.tech/api/china/"+provinceCode+"/"+cityCode;
             queryFromServer(address,"county");
         }
 
@@ -256,7 +265,6 @@ public class ChooseAreaFragment extends Fragment {
             public void onResponse(Call call, Response response) throws IOException {
                 //回调接口，获取接口返回的服务器数据
                 String responseText = response.body().string();
-                Log.d("TAG", "onResponse: "+responseText);
                 boolean result=false;
                 //判断返回的类型，选择对应的解析方法
                 if("province".equals(type)){
