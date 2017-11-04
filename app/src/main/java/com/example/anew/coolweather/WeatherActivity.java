@@ -101,85 +101,53 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         //endregion
 
-        //region Description
-//        //每个应用都有一个默认的配置文件preferences.xml，使用getDefaultSharedPreferences获取。
-//        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-//        //负责读取存在的数据（Editor写入的缓冲数据）
-//        weatherString = prefs.getString("weather",null);
-//
-//
-//        //必应图片显示
-//        String bingPic =prefs.getString("bing_pic",null);
-//        if(bingPic != null){
-//            Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
-//        }
-//        else{
-//            loadBingPic();
-//        }
-//        //在手动下拉刷新时，再次向服务器请求数据显示到界面
-//        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                requestWeather(mWeatherId);
-//            }
-//        });
-//
-//        //打开侧滑菜单
-//        navButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                drawerLayout.openDrawer(GravityCompat.START);
-//            }
-//        });
-//
-//        if(weatherString!=null){  //判断缓冲
-//            //有缓冲时直接解析天气数据
-//            Weather weather = Utility.handleWeatherResponse(weatherString);
-//            //更新天气
-//            mWeatherId=weather.basic.weatherId;
-//            //mWeatherId=getIntent().getStringExtra("weather_id");
-//            showWeatherInfo(weather);
-//        }
-//        else{
-//            //无缓冲时去服务器查询天气,获取传递过来的天气code
-//            mWeatherId = getIntent().getStringExtra("weather_id");
-//            weatherLayout.setVisibility(View.INVISIBLE);
-//            requestWeather(mWeatherId);
-//
-//        }
-        //endregion
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherString = prefs.getString("weather", null);
-        if (weatherString != null) {
-            // 有缓存时直接解析天气数据
-            Weather weather = Utility.handleWeatherResponse(weatherString);
-            mWeatherId = weather.basic.weatherId;
-            showWeatherInfo(weather);
-        } else {
-            // 无缓存时去服务器查询天气
-            mWeatherId = getIntent().getStringExtra("weather_id");
-            weatherLayout.setVisibility(View.INVISIBLE);
-            requestWeather(mWeatherId);
+        //每个应用都有一个默认的配置文件preferences.xml，使用getDefaultSharedPreferences获取。
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+        //负责读取存在的数据（Editor写入的缓冲数据）
+        weatherString = prefs.getString("weather",null);
+
+
+        //必应图片显示
+        String bingPic =prefs.getString("bing_pic",null);
+        if(bingPic != null){
+            Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
         }
+        else{
+            loadBingPic();
+        }
+        //在手动下拉刷新时，再次向服务器请求数据显示到界面
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 requestWeather(mWeatherId);
             }
         });
+
+        //打开侧滑菜单
         navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
-        String bingPic = prefs.getString("bing_pic", null);
-        if (bingPic != null) {
-            Glide.with(this).load(bingPic).into(bingPicImg);
-        } else {
-            loadBingPic();
+
+        if(weatherString!=null){  //判断缓冲
+            //有缓冲时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse(weatherString);
+            //更新天气
+            mWeatherId=weather.basic.weatherId;
+            //mWeatherId=getIntent().getStringExtra("weather_id");
+            showWeatherInfo(weather);
         }
+        else{
+            //无缓冲时去服务器查询天气,获取传递过来的天气code
+            mWeatherId = getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            requestWeather(mWeatherId);
+
+        }
+
 
     }
 
