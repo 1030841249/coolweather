@@ -6,3 +6,6 @@
   4. 地区选择
   5. 每日一图背景
   6. 自动刷新或者手动刷新天气信息
+  
+  ### 效果图
+  ![](https://github.com/1030841249/coolweather/blob/master/gif/3.gif)
